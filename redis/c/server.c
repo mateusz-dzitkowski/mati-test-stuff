@@ -1,33 +1,70 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-#include "setup.c"
+#include "lib.c"
 
-void process_conn(int);
+error process_request(int);
 
 int main() {
-    const auto fd = get_bound_socket(htonl(0), htons(1234));
-    if (fd == ERR_CODE) {
-        return EXIT_FAILURE;
+    const auto fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
+        die("error creating the socket");
     }
-    if (listen(fd, SOMAXCONN)) {return ERR_CODE;}
+
+    if (bind_socket(fd, ntohl(0), ntohs(1234)) != ERR_OK) {
+        die("error binding the socket");
+    }
+
+    if (listen(fd, SOMAXCONN)) {
+        die("error listening on the socket");
+    }
 
     while (true) {
         struct sockaddr_in addr = {};
         socklen_t addr_len = sizeof(addr);
         const auto conn = accept(fd, (struct sockaddr*)&addr, &addr_len);
-        if (conn < 0) {return EXIT_FAILURE;}
-        process_conn(conn);
+        if (conn < 0) {
+            die("error accepting on the socket");
+        }
+        while (true) {
+            if (process_request(conn) != ERR_OK) {
+                break;
+            }
+        }
     }
 }
 
-void process_conn(const int conn) {
-    char read_buffer[64] = {};
-    const auto n = read(conn, read_buffer, sizeof(read_buffer) - 1);
-    if (n < 0) {return;}
-    printf("client says %s\n", read_buffer);
+error process_request(const int conn) {
+    error err;
+    char read_buffer[MESSAGE_SIZE_BYTES + MAX_MESSAGE_SIZE];
 
-    constexpr char write_buffer[] = "hello, world";
-    write(conn, write_buffer, sizeof(write_buffer));
+    if ((err = read_full(conn, read_buffer, MESSAGE_SIZE_BYTES)) != ERR_OK) {
+        return err;
+    }
+
+    size_t len = 0;
+    memcpy(&len, read_buffer, MESSAGE_SIZE_BYTES);
+    if (len > MAX_MESSAGE_SIZE) {
+        return ERR_MESSAGE_TOO_LONG;
+    }
+
+    if ((err = read_full(conn, &read_buffer[MESSAGE_SIZE_BYTES], len)) != ERR_OK) {
+        return err;
+    }
+
+    msg("client says `%.*s`", len, &read_buffer[MESSAGE_SIZE_BYTES]);
+
+    constexpr char reply[] = "hello, world";
+    char write_buffer[MESSAGE_SIZE_BYTES + sizeof(reply)];
+    len = strlen(reply);
+    memcpy(write_buffer, &len, MESSAGE_SIZE_BYTES);
+    memcpy(&write_buffer[MESSAGE_SIZE_BYTES], reply, len);
+
+    if ((err = write_full(conn, write_buffer, MESSAGE_SIZE_BYTES + len)) != ERR_OK) {
+        return err;
+    }
+
+    return ERR_OK;
 }
