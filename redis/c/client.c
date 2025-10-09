@@ -6,7 +6,6 @@
 
 int main() {
     auto const fd = socket(AF_INET, SOCK_STREAM, 0);
-    printf("created the fd = %d\n", fd);
     if (fd == -1) {return EXIT_FAILURE;}
 
     const struct sockaddr_in addr = get_addr(ntohl(INADDR_LOOPBACK), ntohs(1234));
