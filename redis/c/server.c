@@ -13,6 +13,10 @@ int main() {
         die("error creating the socket");
     }
 
+    if (set_socket_config(fd)) {
+        die("error configuring the socket");
+    }
+
     if (bind_socket(fd, ntohl(0), ntohs(1234)) != ERR_OK) {
         die("error binding the socket");
     }

@@ -23,6 +23,9 @@ int main(int argc, char *argv[]) {
         if (query(fd, argv[i]) != ERR_OK) {
             die("error issuing query");
         }
+        if (i + 1 < argc) {
+            sleep(1);
+        }
     }
 
     return EXIT_SUCCESS;

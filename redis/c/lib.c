@@ -1,6 +1,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -65,7 +66,7 @@ error write_full(const int fd, const char *buf, size_t n) {
 }
 
 error set_socket_config(const int fd) {
-    constexpr auto config_so_reuseaddr = true;
+    constexpr auto config_so_reuseaddr = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &config_so_reuseaddr, sizeof(config_so_reuseaddr)) != 0) {
         return ERR_SOCKET_CONFIG;
     }
