@@ -6,4 +6,6 @@ set(CMAKE_C_STANDARD 23)
 add_executable(redic
         server.c
         client.c
-        lib.c)
+        lib.c
+        vector.c
+        test_vector.c)
