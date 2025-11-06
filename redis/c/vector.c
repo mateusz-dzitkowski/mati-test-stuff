@@ -1,8 +1,7 @@
 #include <stdlib.h>
-#include <stdbool.h>
 #include <stdio.h>
 
-const int CAPACITY_STEP = 4;
+constexpr int CAPACITY_STEP = 4;
 
 typedef struct vector_t {
     int* elements;
@@ -15,7 +14,7 @@ vector_t* vector_new() {
 }
 
 void vector_init(vector_t* v) {
-    v->elements = calloc(CAPACITY_STEP, sizeof(int));
+    v->elements = (int*) calloc(CAPACITY_STEP, sizeof(int));
     v->capacity = CAPACITY_STEP;
     v->size = 0;
 }
@@ -32,7 +31,7 @@ void vector_free(vector_t* v) {
 void vector_push_back(vector_t* v, const int elem) {
     if (vector_is_full(v)) {
         v->capacity = v->size + CAPACITY_STEP;
-        int *temp = realloc(v->elements, v->capacity * sizeof(int));
+        auto *temp = (int*) realloc(v->elements, v->capacity * sizeof(int));
         if (temp == NULL) {
             vector_free(v);
             abort();

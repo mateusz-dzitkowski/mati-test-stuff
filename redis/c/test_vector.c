@@ -3,7 +3,7 @@
 #include "vector.c"
 
 void test_vector_is_full() {
-    vector_t* v = vector_new();
+    auto* v = vector_new();
     vector_init(v);
 
     assert(vector_is_full(v) == false);
@@ -103,6 +103,25 @@ void test_vector_erase_2() {
     vector_free(v);
 }
 
+void test_erase_one() {
+    vector_t* v = vector_new();
+    vector_init(v);
+
+    vector_push_back(v, 111);
+    vector_push_back(v, 222);
+    vector_push_back(v, 333);
+
+    assert(v->size == 3);
+
+    vector_erase_one(v, 0);
+
+    assert(v->size == 2);
+    assert(vector_at(v, 0) == 222);
+    assert(vector_at(v, 1) == 333);
+
+    vector_free(v);
+}
+
 int main() {
     test_vector_is_full();
     test_vector_push_back();
@@ -110,4 +129,5 @@ int main() {
     test_vector_pop_back();
     test_vector_erase_1();
     test_vector_erase_2();
+    test_erase_one();
 }
