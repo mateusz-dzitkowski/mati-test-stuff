@@ -1,0 +1,16 @@
+version: 3
+
+tasks:
+  compile:*:
+    cmd: g++ -Wall -Wextra -Og -g {{index .MATCH 0}}.c -o {{index .MATCH 0}}
+
+  compile_all:
+    cmds:
+      - task: compile:server
+      - task: compile:client
+
+  test:
+    cmds:
+      - task: compile:test_vector
+      - cmd: ./test_vector
+      - cmd: rm ./test_vector

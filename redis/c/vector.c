@@ -10,7 +10,7 @@ typedef struct vector_t {
 } vector_t;
 
 vector_t* vector_new() {
-    return malloc(sizeof(vector_t));
+    return (vector_t*) malloc(sizeof(vector_t));
 }
 
 void vector_init(vector_t* v) {
