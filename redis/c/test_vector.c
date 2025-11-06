@@ -2,124 +2,126 @@
 
 #include "vector.c"
 
-void test_vector_is_full() {
-    auto* v = vector_new();
-    vector_init(v);
+make_vector_struct(int)
 
-    assert(vector_is_full(v) == false);
+void test_vector_is_full() {
+    auto* v = int_vector_new();
+    int_vector_init(v);
+
+    assert(int_vector_is_full(v) == false);
 
     for (int i = 0; i < CAPACITY_STEP; i++) {
-        vector_push_back(v, 0);
+        int_vector_push_back(v, 0);
     }
 
-    assert(vector_is_full(v) == true);
+    assert(int_vector_is_full(v) == true);
 
-    vector_free(v);
+    int_vector_free(v);
 }
 
 void test_vector_push_back() {
-    vector_t* v = vector_new();
-    vector_init(v);
+    int_vector_t* v = int_vector_new();
+    int_vector_init(v);
 
-    vector_push_back(v, 123);
+    int_vector_push_back(v, 123);
 
     assert(v->size == 1);
     assert(v->capacity == CAPACITY_STEP);
     assert(v->elements[0] == 123);
 
-    vector_free(v);
+    int_vector_free(v);
 }
 
 void test_vector_at() {
-    vector_t* v = vector_new();
-    vector_init(v);
+    int_vector_t* v = int_vector_new();
+    int_vector_init(v);
 
-    vector_push_back(v, 123);
-    vector_push_back(v, 321);
+    int_vector_push_back(v, 123);
+    int_vector_push_back(v, 321);
 
-    assert(vector_at(v, 0) == 123);
-    assert(vector_at(v, 1) == 321);
+    assert(int_vector_at(v, 0) == 123);
+    assert(int_vector_at(v, 1) == 321);
 
-    vector_free(v);
+    int_vector_free(v);
 }
 
 void test_vector_pop_back() {
-    vector_t* v = vector_new();
-    vector_init(v);
+    int_vector_t* v = int_vector_new();
+    int_vector_init(v);
 
-    vector_push_back(v, 123);
-    vector_push_back(v, 321);
+    int_vector_push_back(v, 123);
+    int_vector_push_back(v, 321);
 
     assert(v->size == 2);
-    assert(vector_at(v, 0) == 123);
-    assert(vector_at(v, 1) == 321);
+    assert(int_vector_at(v, 0) == 123);
+    assert(int_vector_at(v, 1) == 321);
 
-    vector_pop_back(v);
+    int_vector_pop_back(v);
 
     assert(v->size == 1);
-    assert(vector_at(v, 0) == 123);
+    assert(int_vector_at(v, 0) == 123);
 
-    vector_free(v);
+    int_vector_free(v);
 }
 
 void test_vector_erase_1() {
-    vector_t* v = vector_new();
-    vector_init(v);
+    int_vector_t* v = int_vector_new();
+    int_vector_init(v);
 
-    vector_push_back(v, 111);
-    vector_push_back(v, 222);
-    vector_push_back(v, 333);
-    vector_push_back(v, 444);
-    vector_push_back(v, 555);
+    int_vector_push_back(v, 111);
+    int_vector_push_back(v, 222);
+    int_vector_push_back(v, 333);
+    int_vector_push_back(v, 444);
+    int_vector_push_back(v, 555);
 
     assert(v->size == 5);
-    assert(vector_at(v, 1) == 222);
+    assert(int_vector_at(v, 1) == 222);
 
-    vector_erase(v, 2, 2);
+    int_vector_erase(v, 2, 2);
 
     assert(v->size == 3);
-    assert(vector_at(v, 1) == 222);
-    assert(vector_at(v, 2) == 555);
+    assert(int_vector_at(v, 1) == 222);
+    assert(int_vector_at(v, 2) == 555);
 
-    vector_free(v);
+    int_vector_free(v);
 }
 
 void test_vector_erase_2() {
-    vector_t* v = vector_new();
-    vector_init(v);
+    int_vector_t* v = int_vector_new();
+    int_vector_init(v);
 
-    vector_push_back(v, 111);
-    vector_push_back(v, 222);
-    vector_push_back(v, 333);
+    int_vector_push_back(v, 111);
+    int_vector_push_back(v, 222);
+    int_vector_push_back(v, 333);
 
     assert(v->size == 3);
-    assert(vector_at(v, 1) == 222);
+    assert(int_vector_at(v, 1) == 222);
 
-    vector_erase(v, 1, 2);
+    int_vector_erase(v, 1, 2);
 
     assert(v->size == 1);
-    assert(vector_at(v, 0) == 111);
+    assert(int_vector_at(v, 0) == 111);
 
-    vector_free(v);
+    int_vector_free(v);
 }
 
 void test_erase_one() {
-    vector_t* v = vector_new();
-    vector_init(v);
+    int_vector_t* v = int_vector_new();
+    int_vector_init(v);
 
-    vector_push_back(v, 111);
-    vector_push_back(v, 222);
-    vector_push_back(v, 333);
+    int_vector_push_back(v, 111);
+    int_vector_push_back(v, 222);
+    int_vector_push_back(v, 333);
 
     assert(v->size == 3);
 
-    vector_erase_one(v, 0);
+    int_vector_erase_one(v, 0);
 
     assert(v->size == 2);
-    assert(vector_at(v, 0) == 222);
-    assert(vector_at(v, 1) == 333);
+    assert(int_vector_at(v, 0) == 222);
+    assert(int_vector_at(v, 1) == 333);
 
-    vector_free(v);
+    int_vector_free(v);
 }
 
 int main() {
