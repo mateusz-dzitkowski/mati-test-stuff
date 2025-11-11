@@ -124,6 +124,38 @@ void test_erase_one() {
     int_vector_free(v);
 }
 
+void test_clear() {
+    int_vector_t* v = int_vector_new();
+    int_vector_init(v);
+
+    int_vector_push_back(v, 111);
+    int_vector_push_back(v, 222);
+    int_vector_push_back(v, 333);
+
+    assert(v->size == 3);
+
+    int_vector_clear(v);
+
+    assert(v->size == 0);
+
+    int_vector_free(v);
+}
+
+void test_append() {
+    int_vector_t* v = int_vector_new();
+    int_vector_init(v);
+
+    int data[] = {123, 456, 789};
+    int_vector_append(v, data, 3);
+
+    assert(v->size == 3);
+    assert(int_vector_at(v, 0) == 123);
+    assert(int_vector_at(v, 1) == 456);
+    assert(int_vector_at(v, 2) == 789);
+
+    int_vector_free(v);
+}
+
 int main() {
     test_vector_is_full();
     test_vector_push_back();
@@ -132,4 +164,6 @@ int main() {
     test_vector_erase_1();
     test_vector_erase_2();
     test_erase_one();
+    test_clear();
+    test_append();
 }

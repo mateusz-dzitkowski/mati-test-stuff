@@ -31,6 +31,39 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
+error read_full(const int fd, char *buf, size_t n) {
+    while (n > 0) {
+        const ssize_t bytes_read = read(fd, buf, n);
+        if (bytes_read == 0) {
+            return ERR_EOF;
+        }
+        if (bytes_read < 0) {
+            return ERR_READ;
+        }
+        if ((size_t)bytes_read > n) {
+            return ERR_MESSAGE_TOO_LONG;
+        }
+        n -= (size_t)bytes_read;
+        buf += bytes_read;
+    }
+    return ERR_OK;
+}
+
+error write_full(const int fd, const char *buf, size_t n) {
+    while (n > 0) {
+        const ssize_t bytes_written = write(fd, buf, n);
+        if (bytes_written < 0) {
+            return ERR_WRITE;
+        }
+        if ((size_t)bytes_written > n) {
+            return ERR_MESSAGE_TOO_LONG;
+        }
+        n -= (size_t)bytes_written;
+        buf += bytes_written;
+    }
+    return ERR_OK;
+}
+
 error query(const int fd, const char *text) {
     error err;
 

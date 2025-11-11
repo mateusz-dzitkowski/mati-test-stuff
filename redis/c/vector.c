@@ -6,8 +6,8 @@ constexpr int CAPACITY_STEP = 4;
 #define _vector_struct(T) \
     typedef struct T##_vector_t { \
         T* elements; \
-        int capacity; \
-        int size; \
+        size_t capacity; \
+        size_t size; \
     } T##_vector_t;
 
 #define _vector_new(T) \
@@ -47,6 +47,13 @@ constexpr int CAPACITY_STEP = 4;
         v->elements[v->size++] = elem; \
     }
 
+#define _vector_append(T) \
+    void T##_vector_append(T##_vector_t* v, const T *data, size_t len) { \
+        for (size_t i = 0; i < len; i++) { \
+            T##_vector_push_back(v, data[i]); \
+        } \
+    }
+
 #define _vector_at(T) \
     T T##_vector_at(const T##_vector_t* v, const size_t index) { \
         return v->elements[index]; \
@@ -56,13 +63,12 @@ constexpr int CAPACITY_STEP = 4;
     void T##_vector_pop_back(T##_vector_t* v) { \
         if (v->size == 0) { \
             return; \
-        } \
-        v->elements[v->size - 1] = 0; \
+        }         v->elements[v->size - 1] = (T){0}; \
         v->size--; \
     }
 
 #define _vector_erase(T) \
-    void T##_vector_erase(T##_vector_t* v, const uint8_t start_index, const uint8_t erase_amount) { \
+    void T##_vector_erase(T##_vector_t* v, const int start_index, const size_t erase_amount) { \
         for (int i = start_index; i + erase_amount <= v->size; i++) { \
             v->elements[i] = v->elements[i + erase_amount]; \
         } \
@@ -72,6 +78,11 @@ constexpr int CAPACITY_STEP = 4;
 #define _vector_erase_one(T) \
     void T##_vector_erase_one(T##_vector_t* v, const uint8_t index) { \
         T##_vector_erase(v, index, 1); \
+    }
+
+#define _vector_clear(T) \
+    void T##_vector_clear(T##_vector_t* v) { \
+        v->size = 0; \
     }
 
 #define make_vector_struct(T) \
@@ -84,4 +95,6 @@ constexpr int CAPACITY_STEP = 4;
     _vector_at(T) \
     _vector_pop_back(T) \
     _vector_erase(T) \
-    _vector_erase_one(T)
+    _vector_erase_one(T) \
+    _vector_clear(T) \
+    _vector_append(T)

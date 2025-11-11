@@ -2,8 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <poll.h>
 
 #include "lib.c"
+
+typedef struct pollfd pollfd;
+make_vector_struct(pollfd)
 
 error process_request(int);
 
@@ -25,50 +29,67 @@ int main() {
         die("error listening on the socket");
     }
 
+    uintptr_t_vector_t *fd2conn = uintptr_t_vector_new();
+    uintptr_t_vector_init(fd2conn);
+
+    pollfd_vector_t *poll_args = pollfd_vector_new();
+    pollfd_vector_init(poll_args);
+
     while (true) {
-        struct sockaddr_in addr = {};
-        socklen_t addr_len = sizeof(addr);
-        const auto conn = accept(fd, (struct sockaddr*)&addr, &addr_len);
-        if (conn < 0) {
-            die("error accepting on the socket");
+        pollfd_vector_clear(poll_args);
+        pollfd pfd = {fd, POLLIN, 0};
+        pollfd_vector_push_back(poll_args, pfd);
+
+        for (size_t i = 0; i < fd2conn->size; i++) {
+            const conn* c = (conn*)uintptr_t_vector_at(fd2conn, i);
+            if (c == nullptr) {
+                continue;
+            }
+
+            pfd = (pollfd) {c->fd, POLLERR, 0};
+            if (c->want_read) {
+                pfd.events |= POLLIN;
+            }
+            if (c->want_write) {
+                pfd.events |= POLLOUT;
+            }
+            pollfd_vector_push_back(poll_args, pfd);
         }
-        while (true) {
-            if (process_request(conn) != ERR_OK) {
-                break;
+
+        const int rv = poll(poll_args->elements, (nfds_t)poll_args->size, -1);
+        if (rv < 0 && errno == EINTR) {
+            continue;
+        }
+        if (rv < 0) {
+            die("poll");
+        }
+
+        // listening socket
+        if (poll_args->elements[0].revents) {
+            conn c = {};
+            handle_accept(fd, &c);
+            if ((int)fd2conn->size <= c.fd) {
+                uintptr_t_vector_push_back(fd2conn, (uintptr_t)&c);
+            }
+        }
+
+        // connection sockets
+        for (size_t i = 1; i < poll_args->size; ++i) {
+            const uint32_t ready = poll_args->elements[i].revents;
+            conn* c = (conn*)fd2conn->elements[poll_args->elements[i].fd];
+            if (c == nullptr) {
+                continue;
+            }
+            if (ready & POLLIN) {
+                handle_read(c);
+            }
+            if (ready & POLLOUT) {
+                handle_write(c);
+            }
+            if ((ready & POLLERR) || c->want_close) {
+                close(c->fd);
+
             }
         }
     }
-}
-
-error process_request(const int conn) {
-    error err;
-    char read_buffer[MESSAGE_SIZE_BYTES + MAX_MESSAGE_SIZE];
-
-    if ((err = read_full(conn, read_buffer, MESSAGE_SIZE_BYTES)) != ERR_OK) {
-        return err;
-    }
-
-    size_t len = 0;
-    memcpy(&len, read_buffer, MESSAGE_SIZE_BYTES);
-    if (len > MAX_MESSAGE_SIZE) {
-        return ERR_MESSAGE_TOO_LONG;
-    }
-
-    if ((err = read_full(conn, &read_buffer[MESSAGE_SIZE_BYTES], len)) != ERR_OK) {
-        return err;
-    }
-
-    msg("client says `%.*s`", len, &read_buffer[MESSAGE_SIZE_BYTES]);
-
-    constexpr char reply[] = "hello, world";
-    char write_buffer[MESSAGE_SIZE_BYTES + sizeof(reply)];
-    len = strlen(reply);
-    memcpy(write_buffer, &len, MESSAGE_SIZE_BYTES);
-    memcpy(&write_buffer[MESSAGE_SIZE_BYTES], reply, len);
-
-    if ((err = write_full(conn, write_buffer, MESSAGE_SIZE_BYTES + len)) != ERR_OK) {
-        return err;
-    }
-
-    return ERR_OK;
 }
