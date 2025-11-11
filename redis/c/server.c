@@ -40,7 +40,6 @@ int main() {
         pollfd pfd = {fd, POLLIN, 0};
         pollfd_vector_push_back(poll_args, pfd);
 
-
         for (size_t i = 0; i < fd2conn->size; i++) {
             const conn* c = (conn*)uintptr_t_vector_at(fd2conn, i);
             if (c == nullptr) {
@@ -68,12 +67,12 @@ int main() {
 
         // listening socket
         if (poll_args->elements[0].revents) {
-            conn c = {};
-            if (handle_accept(fd, &c) == ERR_OK) {
-                if ((int)fd2conn->size <= c.fd) {
-                    uintptr_t_vector_resize(fd2conn, c.fd + 1);
+            const auto c = (conn*)malloc(sizeof(conn));
+            if (handle_accept(fd, c) == ERR_OK) {
+                if ((int)fd2conn->size <= c->fd) {
+                    uintptr_t_vector_resize(fd2conn, c->fd + 1);
                 }
-                fd2conn->elements[c.fd] = (uintptr_t)&c;
+                fd2conn->elements[c->fd] = (uintptr_t)c;
             }
         }
 
@@ -93,7 +92,8 @@ int main() {
             }
             if (ready & POLLERR || c->want_close) {
                 close(c->fd);
-                fd2conn->elements[c->fd] = 0;
+                fd2conn->elements[c->fd] = (uintptr_t)NULL;
+                free(c);
             }
         }
     }
