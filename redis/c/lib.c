@@ -13,7 +13,7 @@
 make_vector_struct(int)
 make_vector_struct(uint8_t)
 
-constexpr size_t MAX_MESSAGE_SIZE = 4096;
+constexpr size_t MAX_MESSAGE_SIZE = 1 << 20;
 constexpr size_t MESSAGE_SIZE_BYTES = 4;
 
 typedef enum {
@@ -134,37 +134,14 @@ error try_one_request(conn* c) {
     return ERR_OK;
 }
 
-error handle_read(conn* c) {
-    uint8_t buf[64 * 1024];
-    const ssize_t rv = read(c->fd, buf, sizeof(buf));
-    if (rv == 0) {
-        c->want_close = true;
-        return ERR_OK;
-    }
-    if (rv < 0) {
-        c->want_close = true;
-        return ERR_IO;
-    }
-
-    uint8_t_vector_append(&c->incoming, buf, (size_t)rv);
-    const error err = try_one_request(c);
-    if (err != ERR_OK) {
-        return err;
-    }
-
-    if (c->outgoing.size > 0) {
-        c->want_read = false;
-        c->want_write = true;
-    }
-
-    return ERR_OK;
-}
-
 error handle_write(conn* c) {
     if (c->outgoing.size <= 0) {
         return ERR_WRITE;
     }
     const ssize_t rv = write(c->fd, c->outgoing.elements, c->outgoing.size);
+    if (rv < 0 && errno == EAGAIN) {
+        return ERR_OK;
+    }
     if (rv < 0) {
         c->want_close = true;
         return ERR_WRITE;
@@ -178,4 +155,28 @@ error handle_write(conn* c) {
     }
 
     return ERR_OK;
+}
+
+error handle_read(conn* c) {
+    uint8_t buf[64 * 1024];
+    const ssize_t rv = read(c->fd, buf, sizeof(buf));
+    if (rv == 0) {
+        c->want_close = true;
+        return ERR_OK;
+    }
+    if (rv < 0) {
+        c->want_close = true;
+        return ERR_IO;
+    }
+
+    uint8_t_vector_append(&c->incoming, buf, (size_t)rv);
+
+    while (try_one_request(c) == ERR_OK) {}
+
+    if (c->outgoing.size > 0) {
+        c->want_read = false;
+        c->want_write = true;
+    }
+
+    return handle_write(c);
 }
