@@ -22,29 +22,30 @@ constexpr int CAPACITY_STEP = 4;
         v->size = 0; \
     }
 
-#define _vector_is_full(T) \
-    bool T##_vector_is_full(const T##_vector_t* v) { \
-        return v->size > 0 && v->size % v->capacity == 0; \
-    }
-
 #define _vector_free(T) \
-    void T##_vector_free(T##_vector_t* v) { \
-        free(v->elements); \
-        free(v); \
-    }
+void T##_vector_free(T##_vector_t* v) { \
+    free(v->elements); \
+    free(v); \
+}
 
-#define _vector_push_back(T) \
-    void T##_vector_push_back(T##_vector_t* v, const T elem) { \
-        if (T##_vector_is_full(v)) { \
-            v->capacity = v->size + CAPACITY_STEP; \
-            auto *temp = (T*) realloc(v->elements, v->capacity * sizeof(T)); \
+#define _vector_resize(T) \
+    void T##_vector_resize(T##_vector_t* v, size_t size) { \
+        if (size > v->capacity) { \
+            auto *temp = (T*) realloc(v->elements, size * sizeof(T)); \
             if (temp == NULL) { \
                 T##_vector_free(v); \
                 abort(); \
             } \
             v->elements = temp; \
+            v->capacity = size + CAPACITY_STEP - size % CAPACITY_STEP; \
         } \
-        v->elements[v->size++] = elem; \
+        v->size = size; \
+    }
+
+#define _vector_push_back(T) \
+    void T##_vector_push_back(T##_vector_t* v, const T elem) { \
+        T##_vector_resize(v, v->size + 1); \
+        v->elements[v->size - 1] = elem; \
     }
 
 #define _vector_append(T) \
@@ -59,12 +60,9 @@ constexpr int CAPACITY_STEP = 4;
         return v->elements[index]; \
     }
 
-#define _vector_pop_back(T) \
-    void T##_vector_pop_back(T##_vector_t* v) { \
-        if (v->size == 0) { \
-            return; \
-        }         v->elements[v->size - 1] = (T){0}; \
-        v->size--; \
+#define _vector_clear(T) \
+    void T##_vector_clear(T##_vector_t* v) { \
+        v->size = 0; \
     }
 
 #define _vector_erase(T) \
@@ -75,26 +73,14 @@ constexpr int CAPACITY_STEP = 4;
         v->size -= erase_amount; \
     }
 
-#define _vector_erase_one(T) \
-    void T##_vector_erase_one(T##_vector_t* v, const uint8_t index) { \
-        T##_vector_erase(v, index, 1); \
-    }
-
-#define _vector_clear(T) \
-    void T##_vector_clear(T##_vector_t* v) { \
-        v->size = 0; \
-    }
-
 #define make_vector_struct(T) \
     _vector_struct(T) \
     _vector_new(T) \
-    _vector_init(T) \
-    _vector_is_full(T) \
     _vector_free(T) \
+    _vector_init(T) \
+    _vector_resize(T) \
     _vector_push_back(T) \
     _vector_at(T) \
-    _vector_pop_back(T) \
-    _vector_erase(T) \
-    _vector_erase_one(T) \
     _vector_clear(T) \
+    _vector_erase(T) \
     _vector_append(T)

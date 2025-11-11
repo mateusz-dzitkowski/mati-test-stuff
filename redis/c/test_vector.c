@@ -4,21 +4,6 @@
 
 make_vector_struct(int)
 
-void test_vector_is_full() {
-    auto* v = int_vector_new();
-    int_vector_init(v);
-
-    assert(int_vector_is_full(v) == false);
-
-    for (int i = 0; i < CAPACITY_STEP; i++) {
-        int_vector_push_back(v, 0);
-    }
-
-    assert(int_vector_is_full(v) == true);
-
-    int_vector_free(v);
-}
-
 void test_vector_push_back() {
     int_vector_t* v = int_vector_new();
     int_vector_init(v);
@@ -41,25 +26,6 @@ void test_vector_at() {
 
     assert(int_vector_at(v, 0) == 123);
     assert(int_vector_at(v, 1) == 321);
-
-    int_vector_free(v);
-}
-
-void test_vector_pop_back() {
-    int_vector_t* v = int_vector_new();
-    int_vector_init(v);
-
-    int_vector_push_back(v, 123);
-    int_vector_push_back(v, 321);
-
-    assert(v->size == 2);
-    assert(int_vector_at(v, 0) == 123);
-    assert(int_vector_at(v, 1) == 321);
-
-    int_vector_pop_back(v);
-
-    assert(v->size == 1);
-    assert(int_vector_at(v, 0) == 123);
 
     int_vector_free(v);
 }
@@ -105,25 +71,6 @@ void test_vector_erase_2() {
     int_vector_free(v);
 }
 
-void test_erase_one() {
-    int_vector_t* v = int_vector_new();
-    int_vector_init(v);
-
-    int_vector_push_back(v, 111);
-    int_vector_push_back(v, 222);
-    int_vector_push_back(v, 333);
-
-    assert(v->size == 3);
-
-    int_vector_erase_one(v, 0);
-
-    assert(v->size == 2);
-    assert(int_vector_at(v, 0) == 222);
-    assert(int_vector_at(v, 1) == 333);
-
-    int_vector_free(v);
-}
-
 void test_clear() {
     int_vector_t* v = int_vector_new();
     int_vector_init(v);
@@ -145,7 +92,7 @@ void test_append() {
     int_vector_t* v = int_vector_new();
     int_vector_init(v);
 
-    int data[] = {123, 456, 789};
+    constexpr int data[] = {123, 456, 789};
     int_vector_append(v, data, 3);
 
     assert(v->size == 3);
@@ -156,14 +103,30 @@ void test_append() {
     int_vector_free(v);
 }
 
+void test_resize() {
+    int_vector_t* v = int_vector_new();
+    int_vector_init(v);
+
+    constexpr int data[] = {123, 456, 789};
+    int_vector_append(v, data, 3);
+
+    assert(v->size == 3);
+    assert(v->capacity == 4);
+
+    int_vector_resize(v, 5);
+
+    assert(v->size == 5);
+    assert(v->capacity == 8);
+
+    int_vector_free(v);
+}
+
 int main() {
-    test_vector_is_full();
     test_vector_push_back();
     test_vector_at();
-    test_vector_pop_back();
     test_vector_erase_1();
     test_vector_erase_2();
-    test_erase_one();
     test_clear();
     test_append();
+    test_resize();
 }

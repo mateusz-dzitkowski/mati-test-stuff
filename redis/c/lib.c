@@ -127,10 +127,10 @@ error try_one_request(conn* c) {
         return ERR_REQUEST;
     }
     const uint8_t *request = &c->incoming.elements[4];
-    // TODO: process the message?
 
     uint8_t_vector_append(&c->outgoing, (uint8_t*)&len, 4);
     uint8_t_vector_append(&c->outgoing, request, len);
+    uint8_t_vector_erase(&c->incoming, 0, 4+len);
     return ERR_OK;
 }
 
@@ -169,6 +169,7 @@ error handle_write(conn* c) {
         c->want_close = true;
         return ERR_WRITE;
     }
+
     uint8_t_vector_erase(&c->outgoing, 0, rv);
 
     if (c->outgoing.size == 0) {

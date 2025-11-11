@@ -40,6 +40,7 @@ int main() {
         pollfd pfd = {fd, POLLIN, 0};
         pollfd_vector_push_back(poll_args, pfd);
 
+
         for (size_t i = 0; i < fd2conn->size; i++) {
             const conn* c = (conn*)uintptr_t_vector_at(fd2conn, i);
             if (c == nullptr) {
@@ -57,6 +58,7 @@ int main() {
         }
 
         const int rv = poll(poll_args->elements, (nfds_t)poll_args->size, -1);
+
         if (rv < 0 && errno == EINTR) {
             continue;
         }
@@ -67,16 +69,19 @@ int main() {
         // listening socket
         if (poll_args->elements[0].revents) {
             conn c = {};
-            handle_accept(fd, &c);
-            if ((int)fd2conn->size <= c.fd) {
-                uintptr_t_vector_push_back(fd2conn, (uintptr_t)&c);
+            if (handle_accept(fd, &c) == ERR_OK) {
+                if ((int)fd2conn->size <= c.fd) {
+                    uintptr_t_vector_resize(fd2conn, c.fd + 1);
+                }
+                fd2conn->elements[c.fd] = (uintptr_t)&c;
             }
         }
 
         // connection sockets
-        for (size_t i = 1; i < poll_args->size; ++i) {
-            const uint32_t ready = poll_args->elements[i].revents;
-            conn* c = (conn*)fd2conn->elements[poll_args->elements[i].fd];
+        for (size_t i = 1; i < poll_args->size; i++) {
+            const pollfd _pfd = pollfd_vector_at(poll_args, i);
+            const uint32_t ready = _pfd.revents;
+            const auto c = (conn*)uintptr_t_vector_at(fd2conn, _pfd.fd);
             if (c == nullptr) {
                 continue;
             }
@@ -86,9 +91,9 @@ int main() {
             if (ready & POLLOUT) {
                 handle_write(c);
             }
-            if ((ready & POLLERR) || c->want_close) {
+            if (ready & POLLERR || c->want_close) {
                 close(c->fd);
-
+                fd2conn->elements[c->fd] = 0;
             }
         }
     }
