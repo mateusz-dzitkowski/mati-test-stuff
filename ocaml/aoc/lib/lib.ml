@@ -18,3 +18,11 @@ let unzip2 = function
         )
         lst
         ([], [])
+
+let rec all f = function
+    | x :: tl -> (f x) && (all f tl)
+    | _ -> true
+
+let rec any f = function
+    | x :: tl -> (f x) || (any f tl)
+    | _ -> false

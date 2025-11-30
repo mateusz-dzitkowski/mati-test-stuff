@@ -11,16 +11,8 @@ let rec diffs = function
     | x :: y :: tl -> (y - x) :: diffs (y :: tl)
     | _ -> []
 
-let rec all f = function
-    | x :: tl -> (f x) && (all f tl)
-    | _ -> true
-
-let rec any f = function
-    | x :: tl -> (f x) || (any f tl)
-    | _ -> false
-
 let is_safe = function
-    | lst -> let diff = diffs lst in all (fun x -> x >= 1 && x <= 3) diff || all (fun x -> x <= -1 && x >= -3) diff
+    | lst -> let diff = diffs lst in Lib.all (fun x -> x >= 1 && x <= 3) diff || Lib.all (fun x -> x <= -1 && x >= -3) diff
 
 let solve_first data =
     parse data
@@ -45,7 +37,7 @@ let solve_second data =
         |> List.length
         |> range
         |> List.map (fun n -> remove_nth n lst)
-        |> any is_safe
+        |> Lib.any is_safe
     )
     |> List.filter id
     |> List.length
