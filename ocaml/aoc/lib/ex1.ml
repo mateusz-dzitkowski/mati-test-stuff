@@ -8,6 +8,8 @@ type rotation =
     | Right of int
     | Left of int
 
+let (mod) x y = ((x mod y) + y) mod y
+
 let rotate dial rotation =
     match rotation with
     | Right amount -> { at = (dial.at + amount) mod dial.range; range = dial.range; zeros = dial.zeros }
@@ -20,6 +22,18 @@ let note_zero dial =
 
 let step dial rotation =
     rotate dial rotation
+    |> note_zero
+
+let rotate2 dial rotation =
+    let zeros_visited = match rotation with
+        | Right amount -> amount / dial.range + if amount mod dial.range > (dial.range - dial.at) then 1 else 0
+        | Left amount -> amount / dial.range + if dial.at != 0 && amount mod dial.range > dial.at then 1 else 0
+    in match rotation with
+        | Right amount -> { at = (dial.at + amount) mod dial.range; range = dial.range; zeros = dial.zeros + zeros_visited}
+        | Left amount -> { at = (dial.at - amount) mod dial.range; range = dial.range; zeros = dial.zeros + zeros_visited }
+
+let step2 dial rotation =
+    rotate2 dial rotation
     |> note_zero
 
 let split_string s = (String.get s 0, String.sub s 1 (String.length s - 1))
@@ -40,4 +54,10 @@ let solve_first data =
     let init = { at = 50; range = 100; zeros = 0 } in
     parse data
     |> List.fold_left step init
+    |> (fun dial -> dial.zeros)
+
+let solve_second data =
+    let init = { at = 50; range = 100; zeros = 0 } in
+    parse data
+    |> List.fold_left step2 init
     |> (fun dial -> dial.zeros)
