@@ -14,9 +14,6 @@ let () =
     let data = Aoc.Lib.read_all () in
     let result_f = match (!exercise_number, !is_second_stage) with
     | (1, false) -> Result.Ok Aoc.Ex1.solve_first
-    | (1, true) -> Result.Ok Aoc.Ex1.solve_second
-    | (2, false) -> Result.Ok Aoc.Ex2.solve_first
-    | (2, true) -> Result.Ok Aoc.Ex2.solve_second
     | (_, _) -> Result.Error "unknown exercise"
     in match result_f with
     | Ok f -> Printf.printf "exercise %d, stage %d - result = %d" !exercise_number stage (f data)
