@@ -8,21 +8,3 @@ let read_all () =
         with End_of_file -> ()
     );
     Buffer.contents buf
-
-let unzip2 = function
-    | [] -> ([], [])
-    | lst ->
-        List.fold_right (function
-            | [a; b] -> fun (xs, ys) -> (a :: xs, b :: ys)
-            | _ -> failwith "bruh"
-        )
-        lst
-        ([], [])
-
-let rec all f = function
-    | x :: tl -> (f x) && (all f tl)
-    | _ -> true
-
-let rec any f = function
-    | x :: tl -> (f x) || (any f tl)
-    | _ -> false
